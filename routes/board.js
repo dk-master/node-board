@@ -48,12 +48,36 @@ router.post('/add',(req,res,next)=>{
 });
 
 
-router.delete('/delete',(err,req,res,next)=>{});
-router.get('/list',(req,res,next)=>{
-    const{id} = req.query;
-    
-    const sql = 'select title,writer from board where id = ?';
+router.delete('/delete',(req,res,next)=>{
+    const {id} = req.query;
+    const sql = 'delete from board where id = ?';
     const q = format(sql,[id]);
+
+    getConn((err,conn) =>{
+        if(err){
+            return res.status(500).json({success : false, message : err.message});
+        }
+
+conn.query(q, (err,rows) => {
+    if(err){
+        res.status(500).json({success : false, message : err.message});
+     }
+     else {
+         res.status(201).json({success : true, message : "게시물 삭제 성공"});
+
+     }  
+
+})
+
+    })
+
+
+});
+
+router.get('/list',(req,res,next)=>{
+    
+    const sql = 'select title,writer from board ';
+    const q = format(sql);
 
     getConn((err,conn) =>{
         if(err){
@@ -66,7 +90,7 @@ router.get('/list',(req,res,next)=>{
                res.status(500).json({success : false, message : err.message});
             }
             else {
-                res.status(201).json({success : true, message : "게시판 목록 보여지기 성공", data : rows[0]});
+                res.status(201).json({success : true, message : "게시판 목록 보여지기 성공", data : rows});
 
             }  
             
@@ -79,8 +103,65 @@ router.get('/list',(req,res,next)=>{
 });
 
 
-router.put('/update',(req,res,next)=>{});
-router.get('/detail',(req,res,next)=>{});
+router.put('/update',(req,res,next)=>{
+    const {id,title,content} = req.body;
+
+    const sql = 'UPDATE board SET title=?,content=? where id=?';
+    const q = format(sql,[title,content,id]);
+    
+    getConn((err,conn) =>{
+        if(err){
+            return res.status(500).json({success : false, message : err.message});
+        }
+        
+    
+    conn.query(q, (err,rows)=>{
+            if(err){
+               res.status(500).json({success : false, message : err.message});
+            }
+            else {
+                res.status(201).json({success : true, message : "게시물 수정완료 ", data : rows[0]});
+    
+            }  
+            
+        })
+        
+        conn.release(); // 커넥션풀 반납
+    });
+
+});
+
+
+router.get('/detail',(req,res,next)=>{ 
+
+const {id} = req.query;
+
+
+const sql = 'select * from board where id = ? ';
+const q = format(sql,[id]);
+
+getConn((err,conn) =>{
+    if(err){
+        return res.status(500).json({success : false, message : err.message});
+    }
+    
+
+conn.query(q, (err,rows)=>{
+        if(err){
+           res.status(500).json({success : false, message : err.message});
+        }
+        else {
+            res.status(201).json({success : true, message : "게시물 상세보기 ", data : rows[0]});
+
+        }  
+        
+    })
+    
+    conn.release(); // 커넥션풀 반납
+});
+
+
+});
 // export {router};
 
 module.exports = router; // router을 밖으로 뺀다.
